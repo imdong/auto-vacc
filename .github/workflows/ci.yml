@@ -7,7 +7,7 @@ on:
     tags:
       - 'v*.*.*'
 
-jsbs:
+jobs:
   release:
     # 在什么平台上运行，取值为下面 strategy 设置的 matrix.os 的数组参数，在mac 和 windows 下运行（即打包 mac 和 windows 平台）
     runs-on: ${{ matrix.os }}
