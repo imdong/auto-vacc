@@ -26,7 +26,9 @@ jobs:
           node-version: 12
 
       - name: 构建
-        run: yarn electron:build
+        run: |
+          yarn
+          yarn electron:build
       
       # win 系统免安装的包 命令默认使用非登录 shell 运行
       - name: 压缩 win 系统可直接运行的包
