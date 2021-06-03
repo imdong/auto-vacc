@@ -44,4 +44,4 @@ jobs:
           files: |
             dist_electron/*.dmg
             dist_electron/*.exe
-            dist_electron/win-64-unpacked.zip"
+            dist_electron/win-64-unpacked.zip
