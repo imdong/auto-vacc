@@ -37,7 +37,11 @@ jobs:
         run: Compress-Archive -Path ./dist_electron/win-unpacked ./dist_electron/win-64-unpacked.zip 
 
       - name: 发布到 github 的 releases
-        uses: ncipollo/release-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: "dist_electron/*.dmg,dist_electron/*.exe,dist_electron/win-64-unpacked.zip"
+          files: |
+            dist_electron/*.dmg
+            dist_electron/*.exe
+            dist_electron/win-64-unpacked.zip"
