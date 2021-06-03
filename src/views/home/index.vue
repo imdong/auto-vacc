@@ -109,12 +109,12 @@ export default {
     },
     // 任务状态字段显示 todo：时间紧迫状态没想到好方案，可以重新设计优化
     formatStatus(task) {
-      const target = task.users.find(user => user.status.includes('预约失败'))
+      const target = task.users.find(user => user.status.includes('失败'))
       if (target) {
         // 有失败的
         return task.timer ? '预约失败重试中，可点击查看按钮查看失败信息' : '预约失败，可点击查看按钮查看失败信息'
       }
-      const target2 = task.users.every(user => user.status.includes('预约成功'))
+      const target2 = task.users.every(user => user.status.includes('成功'))
       if (target2) {
         // 都成功
         return '预约成功,点击查看按钮查看对应用户具体成功信息'
