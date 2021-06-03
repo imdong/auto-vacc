@@ -17,17 +17,24 @@ jobs:
         os: [macos-latest, windows-latest]
 
     steps:
-      - name: 第一步：检出代码到本地
+      - name: 检出代码到本地
         uses: actions/checkout@v2
 
-      - name: 第二步：安装 Node.js, NPM and Yarn
+      - name: 安装 Node.js, NPM and Yarn
         uses: actions/setup-node@v2
         with:
           node-version: 12
 
-      - name: 第三步：构建发布
-        uses: samuelmeuli/action-electron-builder@v1
+      - name: 构建
+        run: yarn electron:build
+      
+      # win 系统免安装的包 命令默认使用非登录 shell 运行
+      - name: 压缩 win 系统可直接运行的包
+        if: ${{ runner.os == 'Windows' }}
+        run: zip -r ./dist_electron/win-64-unpacked.zip ./dist_electron/win-unpacked
+
+      - name: 发布到 github 的 releases
+        uses: ncipollo/release-action@v1
         with:
-          github_token: ${{ secrets.github_token }}
-          release: ${{ startsWith(github.ref, 'refs/tags/') }}
-          use_vue_cli: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: "dist_electron/*.dmg,dist_electron/*.exe,dist_electron/win-64-unpacked.zip"
