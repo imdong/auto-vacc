@@ -25,6 +25,7 @@ jobs:
         with:
           node-version: 12
 
+      # 加参数 --publish never 是告诉构建不发布，不然默认是发布到 github，发布需要添加 GITHUB_TOKEN 环境变量，这里我们不需要他发布，我们自己写任务发布
       - name: 构建
         run: |
           yarn

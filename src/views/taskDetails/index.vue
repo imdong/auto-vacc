@@ -57,7 +57,7 @@
           :picker-options="{
             selectableRange: '08:00:00 - 18:00:00'
           }" />
-        (预约这个时间之后的)
+        (预约这个时间之后的，包括这个时间)
       </el-form-item>
       <el-form-item label="执行间隔" prop="interval">
         <el-input-number
