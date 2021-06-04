@@ -57,7 +57,7 @@
 import { shell } from 'electron'
 import { mapState, mapMutations } from 'vuex'
 import DayJs from '@/library/dayJs'
-import VaccH5 from '@/library/modules/vaccH5.js'
+import VaccH5 from '@/library/modules/vaccH5'
 import { compareTime } from '@/library/utils.js'
 
 export default {

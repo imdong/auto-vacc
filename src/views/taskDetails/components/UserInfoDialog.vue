@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import VaccH5 from '@/library/modules/vaccH5.js'
+import VaccH5 from '@/library/modules/vaccH5'
 
 const configEnums = {
   add: {
