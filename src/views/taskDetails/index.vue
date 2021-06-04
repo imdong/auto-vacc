@@ -273,6 +273,7 @@ export default {
       const id = Object.keys(this.tasks).length + 1
       const task = {
         id,
+        errorMsg: '', // 任务错误信息
         taskName,
         ...this.form,
         timer: null // 任务定时器

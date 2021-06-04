@@ -129,20 +129,24 @@ export default {
     },
     // 搜索门诊
     async searchDepa(query) {
-      if (query === '') {
-        this.depaOps = []
-      } else {
-        this.loadingSearchDepa = true
-        const res = await VaccH5.getDepaList({
-          token: this.form.token,
-          params: {
-            outpName: query,
-            bactCode: this.bactCode // 加了这个参数，请求才会返回 corpCode、corpName 参数
-          }
-        }).finally(() => {
-          this.loadingSearchDepa = false
-        })
-        this.depaOps = res?.list || []
+      try {
+        if (query === '') {
+          this.depaOps = []
+        } else {
+          this.loadingSearchDepa = true
+          const res = await VaccH5.getDepaList({
+            token: this.form.token,
+            params: {
+              outpName: query,
+              bactCode: this.bactCode // 加了这个参数，请求才会返回 corpCode、corpName 参数
+            }
+          }).finally(() => {
+            this.loadingSearchDepa = false
+          })
+          this.depaOps = res?.list || []
+        }
+      } catch (e) {
+        e.msg && this.$message.error(e.msg)
       }
     },
     depaChange(depaId) {

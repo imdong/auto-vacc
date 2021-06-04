@@ -120,7 +120,7 @@ export default {
         return '预约成功,点击查看按钮查看对应用户具体成功信息'
       }
 
-      return task.timer && '自动预约中'
+      return task.timer ? '自动预约中' : task.errorMsg
     },
     async handleTask(task) {
       if (task.timer) {
@@ -140,25 +140,31 @@ export default {
       return new Promise((resolve, reject) => {
         const { interval, users, date, vaccCode, time } = task
         task.timer = setInterval(async() => {
-          const times = await VaccH5.getOutpatientTimes({
-            token: users[0].token,
-            query: {
-              depaId: users[0].depaId,
-              date,
-              vaccCode
+          try {
+            const times = await VaccH5.getOutpatientTimes({
+              token: users[0].token,
+              query: {
+                depaId: users[0].depaId,
+                date,
+                vaccCode
+              }
+            })
+
+            // 寻找时间段是设置的预约时间及之后且剩余库存数大于等于预约人数
+            const targetTime = times.find(item => {
+              const condition1 = item.restSurplus > users.length - 1
+              const condition2 = time === item.ouatBeginTime || compareTime(time, item.ouatBeginTime)
+              return condition1 && condition2
+            })
+
+            if (targetTime) {
+              this.stopInterval(task)
+              resolve(targetTime)
             }
-          })
-
-          // 寻找时间段是设置的预约时间及之后且剩余库存数大于等于预约人数
-          const targetTime = times.find(item => {
-            const condition1 = item.restSurplus > users.length - 1
-            const condition2 = time === item.ouatBeginTime || compareTime(time, item.ouatBeginTime)
-            return condition1 && condition2
-          })
-
-          if (targetTime) {
+          } catch (e) {
+            // 接口报错 停止任务
             this.stopInterval(task)
-            resolve(targetTime)
+            task.errorMsg = e.msg
           }
         }, interval * 1000)
       })
