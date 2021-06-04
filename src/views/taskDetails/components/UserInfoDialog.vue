@@ -37,8 +37,7 @@
             :remote-method="searchDepa"
             :loading="loadingSearchDepa"
             placeholder="输入关键词搜索"
-            style="width: 300px;"
-            @change="depaChange">
+            style="width: 300px;">
             <el-option
               v-for="item in depaOps"
               :key="item.depaId"
@@ -98,6 +97,11 @@ export default {
   computed: {
     config({ type }) {
       return configEnums[type]
+    }
+  },
+  watch: {
+    'form.depaId'(value) {
+      this.depaChange(value)
     }
   },
   methods: {
