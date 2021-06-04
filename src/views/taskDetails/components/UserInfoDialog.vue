@@ -63,6 +63,7 @@
 </template>
 
 <script>
+import { cloneDeep } from 'lodash'
 import VaccH5 from '@/library/modules/vaccH5'
 
 const configEnums = {
@@ -103,8 +104,9 @@ export default {
     open({ row, appId = '', bactCode = '' }) {
       return new Promise((resolve, reject) => {
         if (row) {
-          // todo：编辑逻辑没做
           this.type = 'edit'
+          this.form = cloneDeep(row)
+          this.searchDepa(row.outpName)
         } else {
           this.type = 'add'
         }

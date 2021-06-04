@@ -90,6 +90,10 @@
             <el-button
               type="text"
               size="mini"
+              @click="editUser($index)">编辑</el-button>
+            <el-button
+              type="text"
+              size="mini"
               class="btn--red"
               @click="delUser($index)">删除</el-button>
           </el-table-column>
@@ -254,6 +258,14 @@ export default {
     delUser(index) {
       this.form.users.splice(index, 1)
       this.$refs.form.validateField('users')
+    },
+    async editUser(index) {
+      const res = await this.$refs.UserInfoDialog.open({
+        row: this.form.users[index],
+        appId: this.form.appId,
+        bactCode: this.form.vaccCode
+      })
+      this.$set(this.form.users, index, res)
     },
     async save() {
       await this.$refs.form.validate()
