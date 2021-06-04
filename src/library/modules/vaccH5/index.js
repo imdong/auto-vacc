@@ -13,12 +13,23 @@ class VaccH5 {
       baseURL: 'https://xgsz.szcdc.net/crmobile/'
     })
     http.defaults.headers.common['Content-Type'] = 'application/json'
-    // 请求发送前 修改请求数据和请求头
+    // 请求发送前 修改请求数据和请求头 数组中最后一个函数必须返回一个字符串， 一个Buffer实例，ArrayBuffer，FormData，或 Stream
     http.defaults.transformRequest = [(data, headers) => {
-      if (Object.prototype.toString.call(data) === '[object FormData]') {
-        headers['Content-Type'] = 'application/x-www-form-urlencoded'
+      const dataType = Object.prototype.toString.call(data)
+      let result = ''
+      switch (dataType) {
+        case '[object FormData]':
+          headers['Content-Type'] = 'application/x-www-form-urlencoded'
+          result = data
+          break
+        case '[object Object]':
+          result = JSON.stringify(data)
+          break
+        default:
+          result = data
+          break
       }
-      return data
+      return result
     }]
 
     // 请求前拦截器
@@ -156,6 +167,7 @@ class VaccH5 {
 
   // 请求预约
   async reqReservation(payload) {
+    console.log('🚀 -> file: index.js -> line 159 -> VaccH5 -> reqReservation -> payload', payload)
     try {
       const res = await this.$fetch.post('reservation/saveAppointment', payload.params, {
         headers: {

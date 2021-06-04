@@ -206,7 +206,8 @@ export default {
           const res = await VaccH5.reqReservation(payload)
           user.status = `${DayJs().format('YYYY-MM-DD HH:mm')} 预约${targetTime.ouatBeginTime}-${targetTime.ouatEndTime}成功：${JSON.stringify(res)}`
         } catch (e) {
-          // 没有预约成功 继续重试
+          // 没有预约成功 清空定时器 继续重试
+          this.stopInterval(task)
           this.handleTask(task)
           user.status = `${DayJs().format('YYYY-MM-DD HH:mm')} 预约失败：${JSON.stringify(e)}，请求参数${JSON.stringify(payload)}`
         }
