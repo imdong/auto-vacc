@@ -162,9 +162,11 @@ export default {
               resolve(targetTime)
             }
           } catch (e) {
-            // 接口报错 停止任务
-            this.stopInterval(task)
-            task.errorMsg = e.msg
+            if (e.ecode === '201001800') {
+              // token 错误 停止任务
+              this.stopInterval(task)
+              task.errorMsg = e.msg
+            }
           }
         }, interval * 1000)
       })
