@@ -3,7 +3,7 @@
   <el-dialog
     :title="config.title"
     :visible.sync="show"
-    @close="close">
+    @closed="closed">
     <el-form
       ref="form"
       :model="form"
@@ -162,7 +162,7 @@ export default {
       this.resolve && this.resolve(this.form)
       this.show = false
     },
-    close() {
+    closed() {
       this.form = this.$options.data().form
       this.$nextTick(() => {
         this.$refs.form.clearValidate()

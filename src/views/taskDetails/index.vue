@@ -269,6 +269,7 @@ export default {
     },
     // 处理新增任务
     handleAdd() {
+      // tasks 是对象 key 和 value.id 一样
       const taskName = this.generateTaskName(this.form) // 任务名
       const id = Object.keys(this.tasks).length + 1
       const task = {

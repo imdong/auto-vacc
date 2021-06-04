@@ -18,13 +18,19 @@
         v-bind="col" />
       <el-table-column
         label="操作"
-        width="180"
+        width="240"
         #default="{ row, $index }">
         <el-button
           type="text"
           size="mini"
           @click="handleTask(row)">
           {{ row.timer ? '停止任务' : '开始任务' }}
+        </el-button>
+        <el-button
+          type="text"
+          size="mini"
+          @click="viewLogs(row)">
+          运行日志
         </el-button>
         <el-button
           type="text"
@@ -50,6 +56,9 @@
         开源地址：https://github.com/iamobj/auto-vacc
       </el-button>
     </footer>
+
+    <!-- 日志弹框 -->
+    <DialogLog ref="DialogLog" />
   </div>
 </template>
 
@@ -59,8 +68,12 @@ import { mapState, mapMutations } from 'vuex'
 import DayJs from '@/library/dayJs'
 import VaccH5 from '@/library/modules/vaccH5'
 import { compareTime } from '@/library/utils.js'
+import { DialogLog } from './components'
 
 export default {
+  components: {
+    DialogLog
+  },
   data() {
     return {
       columns: [
@@ -106,6 +119,10 @@ export default {
     },
     del(index) {
       this.$delete(this.tasks, index + 1)
+    },
+    // 查看日志
+    viewLogs(row) {
+      this.$refs.DialogLog.open(row.logs)
     },
     // 任务状态字段显示 todo：时间紧迫状态没想到好方案，可以重新设计优化
     formatStatus(task) {
@@ -160,8 +177,22 @@ export default {
             if (targetTime) {
               this.stopInterval(task)
               resolve(targetTime)
+              this.setTaskLogs(task, {
+                str: `${DayJs().format('YYYY-MM-DD HH:mm:ss')} 检查库存：【有符合要求的】`,
+                json: times
+              })
+            } else {
+              this.setTaskLogs(task, {
+                str: `${DayJs().format('YYYY-MM-DD HH:mm:ss')} 检查库存：没有符合要求的`,
+                json: times
+              })
             }
           } catch (e) {
+            this.setTaskLogs(task, {
+              str: `${DayJs().format('YYYY-MM-DD HH:mm:ss')} 检查库存出错`,
+              json: e
+            })
+
             if (e.ecode === '201001800') {
               // token 错误 停止任务
               this.stopInterval(task)
@@ -185,7 +216,7 @@ export default {
         })
         const targetDepa = depaList?.list?.[0]
         if (targetDepa?.outpName === user.outpName && targetDepa?.corpCode) {
-          // 门诊一样且有有疫苗厂商代码（有时候请求接口没有返回这两个字段，原因待究），再更新疫苗厂商信息
+          // 门诊一样且有疫苗厂商代码（有时候请求接口没有返回这两个字段，原因待究），再更新疫苗厂商信息
           user.corpName = targetDepa.corpName
           user.corpCode = targetDepa.corpCode
         }
@@ -205,7 +236,17 @@ export default {
         try {
           const res = await VaccH5.reqReservation(payload)
           user.status = `${DayJs().format('YYYY-MM-DD HH:mm')} 预约${targetTime.ouatBeginTime}-${targetTime.ouatEndTime}成功：${JSON.stringify(res)}`
+
+          this.setTaskLogs(task, {
+            str: `${DayJs().format('YYYY-MM-DD HH:mm:ss')} ${user.reusTrueName}预约成功`,
+            json: res
+          })
         } catch (e) {
+          this.setTaskLogs(task, {
+            str: `${DayJs().format('YYYY-MM-DD HH:mm:ss')} ${user.reusTrueName}预约失败`,
+            json: e
+          })
+
           // 没有预约成功 清空定时器 继续重试
           this.stopInterval(task)
           this.handleTask(task)
@@ -218,6 +259,18 @@ export default {
       if (task.timer) {
         clearInterval(task.timer)
         task.timer = null
+      }
+    },
+    // 写入任务日志 {str: ``, json: {}}
+    setTaskLogs(task, payload) {
+      if (task.logs) {
+        if (task.logs.length === 50) {
+          // 最多纪录50条日志
+          task.logs.pop()
+        }
+        task.logs.unshift(payload)
+      } else {
+        task.logs = [payload]
       }
     },
     openLink(url) {

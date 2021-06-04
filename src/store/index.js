@@ -11,9 +11,13 @@ function clearIntervalAll(tasks) {
     }
   })
 }
-// 还原所有任务的所有用户状态
-function resetStatus(tasks) {
+// 重置任务的一些字段
+function resetData(tasks) {
   Object.values(tasks).forEach((task) => {
+    // 重置任务日志
+    task.logs = []
+
+    // 重置用户状态
     task.users.forEach((user) => {
       user.status = ''
     })
@@ -32,7 +36,7 @@ const VuexInstance = new Vuex.Store({
       if (tasks) {
         // 每次软件重新打开 要置空所有定时器记录 并清空任务状态和用户状态
         clearIntervalAll(tasks)
-        resetStatus(tasks)
+        resetData(tasks)
         state.tasks = tasks
       }
     },

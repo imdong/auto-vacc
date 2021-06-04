@@ -1,5 +1,6 @@
 import Vue from 'vue'
-import { Button, Table, TableColumn, MessageBox, Form, FormItem, Input, InputNumber, Select, DatePicker, TimePicker, Option, Message, Dialog } from 'element-ui'
+import { Button, Table, TableColumn, MessageBox, Form, FormItem, Input, InputNumber, Select, DatePicker, TimePicker, Option, Message, Dialog, Alert } from 'element-ui'
+import './style.scss'
 
 const components = [
   Button,
@@ -9,6 +10,7 @@ const components = [
   MessageBox,
   Dialog,
   TimePicker,
+  Alert,
   Form, FormItem, Input, Select, DatePicker, Option
 ]
 
