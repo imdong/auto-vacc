@@ -167,7 +167,6 @@ class VaccH5 {
 
   // 请求预约
   async reqReservation(payload) {
-    console.log('🚀 -> file: index.js -> line 159 -> VaccH5 -> reqReservation -> payload', payload)
     try {
       const res = await this.$fetch.post('reservation/saveAppointment', payload.params, {
         headers: {

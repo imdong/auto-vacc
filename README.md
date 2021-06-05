@@ -16,7 +16,7 @@
 
 这个视频是基于 0.2.0 版本录的
 
-https://user-images.githubusercontent.com/36121945/120890410-0981cd00-c635-11eb-97e8-b19aa0ca6254.mp4
+https://user-images.githubusercontent.com/36121945/120894797-e5ca8100-c64c-11eb-92e5-6459055fcb83.mp4
 
 下面是我自己预约成功的
 
