@@ -105,8 +105,7 @@ export default {
   },
   methods: {
     ...mapMutations({
-      clearTasks: 'clearTasks',
-      delTask: 'delTask'
+      clearTasks: 'clearTasks'
     }),
     add() {
       this.$router.push({ name: 'taskDetails', params: { type: 'add' } })
@@ -269,8 +268,6 @@ export default {
           task.logs.pop()
         }
         task.logs.unshift(payload)
-      } else {
-        task.logs = [payload]
       }
     },
     openLink(url) {

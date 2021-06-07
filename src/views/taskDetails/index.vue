@@ -288,6 +288,7 @@ export default {
         id,
         errorMsg: '', // 任务错误信息
         taskName,
+        logs: [],
         ...this.form,
         timer: null // 任务定时器
       }
