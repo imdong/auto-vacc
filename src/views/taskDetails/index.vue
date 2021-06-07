@@ -64,7 +64,7 @@
           step-strictly
           :controls="false"
           v-model="form.interval" />
-        (单位秒，多少秒刷一次)
+        (单位秒，多少秒刷一次，建议不要太低，接口请求频率太快，官方可能会封 ip)
       </el-form-item>
       <el-form-item label="预约人员" prop="users">
         <el-button
@@ -90,14 +90,35 @@
             <el-button
               type="text"
               size="mini"
-              @click="editUser($index)">编辑</el-button>
-            <el-button
-              type="text"
-              size="mini"
               class="btn--red"
               @click="delUser($index)">删除</el-button>
           </el-table-column>
         </el-table>
+      </el-form-item>
+
+      <el-form-item label="接种门诊" prop="depaId">
+        <el-select
+          v-model="form.depaId"
+          :disabled="!form.users.length"
+          filterable
+          remote
+          :remote-method="searchDepa"
+          :loading="loadingSearchDepa"
+          :placeholder="form.users.length ? '输入关键词搜索' : '添加人员后才能选择门诊'"
+          style="width: 300px;">
+          <el-option
+            v-for="item in depaOps"
+            :key="item.depaId"
+            :label="item.outpName"
+            :value="item.depaId" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="疫苗厂商" prop="corpName">
+        {{ form.corpName }}
+        <span v-if="form.corpName" style="margin-left: 6px;">
+          (疫苗厂商每天都会变，具体以预约成功的为准)
+        </span>
+        <span v-else style="color: #c0c4cc;">选择门诊自动带出，如没有带出返回重建任务或换一家门诊试试</span>
       </el-form-item>
     </el-form>
 
@@ -116,6 +137,7 @@
 <script>
 import { clipboard } from 'electron'
 import { cloneDeep } from 'lodash'
+import VaccH5 from '@/library/modules/vaccH5'
 import DayJs from '@/library/dayJs'
 import { mapState, mapMutations } from 'vuex'
 const UserInfoDialog = () => import('./components/UserInfoDialog')
@@ -138,7 +160,7 @@ export default {
   props: {
     type: {
       type: String,
-      default: 'add' // add-新增 edit-编辑
+      default: 'add' // add-新增 edit-编辑 view-查看
     },
     obj: {
       type: Object,
@@ -154,14 +176,18 @@ export default {
         date: DayJs().format('YYYY-MM-DD'),
         time: DayJs().format('HH:mm'),
         interval: '10',
-        users: []
+        users: [],
+        depaId: '',
+        corpName: ''
       },
       rules: {
         taskName: [{ required: true, message: '任务名称必填' }],
         date: [{ required: true, message: '预约日期必选' }],
         time: [{ required: true, message: '预约时间必填' }],
         interval: [{ required: true, message: '执行间隔必填' }],
-        users: [{ required: true, message: '预约人员至少要有一位' }]
+        users: [{ required: true, message: '预约人员至少要有一位' }],
+        depaId: [{ required: true, message: '请选择接种门诊' }],
+        corpName: [{ required: true, message: '疫苗厂商不能为空，选择门诊自动带出，如没有带出返回重建任务或换一家门诊试试' }]
       },
       columns: [
         {
@@ -172,18 +198,6 @@ export default {
         {
           label: 'token',
           prop: 'token',
-          showOverflowTooltip: true
-        },
-        {
-          label: '接种门诊',
-          prop: 'outpName',
-          width: 130,
-          showOverflowTooltip: true
-        },
-        {
-          label: '疫苗厂商',
-          prop: 'corpName',
-          width: 110,
           showOverflowTooltip: true
         },
         {
@@ -203,7 +217,9 @@ export default {
           label: '新冠疫苗',
           value: '5601'
         }
-      ]
+      ],
+      loadingSearchDepa: false,
+      depaOps: []
     }
   },
   computed: {
@@ -224,14 +240,24 @@ export default {
           this.form = cloneDeep(v)
         }
       }
+    },
+    'form.depaId'(value) {
+      this.depaChange(value)
     }
   },
   mounted() {
+    this.init()
   },
   methods: {
     ...mapMutations({
       setTasks: 'setTasks'
     }),
+    init() {
+      if (this.type !== 'add') {
+        // 只要不是新增 进来请求门诊列表接口 让选择器显示出门诊名称
+        this.searchDepa(this.form.outpName)
+      }
+    },
     // 双击单元格
     cellDblClick(row, column, cell) {
       if (column.label === '操作') return
@@ -243,11 +269,43 @@ export default {
         this.$message.success(`复制${column.label}成功`)
       }
     },
+    // 搜索门诊
+    async searchDepa(query) {
+      try {
+        if (query === '') {
+          this.depaOps = []
+        } else {
+          this.loadingSearchDepa = true
+          const res = await VaccH5.getDepaList({
+            token: this.form.users[0].token,
+            params: {
+              outpName: query,
+              bactCode: this.form.vaccCode // 加了这个参数，请求才会返回 corpCode、corpName 参数
+            }
+          }).finally(() => {
+            this.loadingSearchDepa = false
+          })
+          this.depaOps = res?.list || []
+        }
+      } catch (e) {
+        e.msg && this.$message.error(e.msg)
+      }
+    },
+    // 门诊值改变事件
+    depaChange(depaId) {
+      const target = this.depaOps.find(item => item.depaId === depaId)
+      if (target) {
+        this.form.corpName = target.corpName // 疫苗厂商名称
+        this.form.corpCode = target.corpCode // 疫苗厂商 code
+        this.form.outpName = target.outpName // 门诊名称 请求预约接口之前需要通过这个字段搜索获取最新门诊疫苗厂商情况
+
+        this.$refs.form.validateField('corpName')
+      }
+    },
     async addUser() {
       // todo：新增没有去重
       const res = await this.$refs.UserInfoDialog.open({
-        appId: this.form.appId,
-        bactCode: this.form.vaccCode
+        appId: this.form.appId
       })
       this.form.users.unshift({
         status: '', // 加个预约状态字段
@@ -258,14 +316,6 @@ export default {
     delUser(index) {
       this.form.users.splice(index, 1)
       this.$refs.form.validateField('users')
-    },
-    async editUser(index) {
-      const res = await this.$refs.UserInfoDialog.open({
-        row: this.form.users[index],
-        appId: this.form.appId,
-        bactCode: this.form.vaccCode
-      })
-      this.$set(this.form.users, index, res)
     },
     async save() {
       await this.$refs.form.validate()

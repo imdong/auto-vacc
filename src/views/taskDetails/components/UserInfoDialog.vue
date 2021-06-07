@@ -29,28 +29,6 @@
         <el-form-item label="姓名" prop="reusTrueName">
           {{ form.reusTrueName }}
         </el-form-item>
-        <el-form-item label="接种门诊" prop="depaId">
-          <el-select
-            v-model="form.depaId"
-            filterable
-            remote
-            :remote-method="searchDepa"
-            :loading="loadingSearchDepa"
-            placeholder="输入关键词搜索"
-            style="width: 300px;">
-            <el-option
-              v-for="item in depaOps"
-              :key="item.depaId"
-              :label="item.outpName"
-              :value="item.depaId" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="疫苗厂商" prop="corpName">
-          {{ form.corpName }}
-          <span v-if="form.corpName" style="margin-left: 6px;">
-            (疫苗厂商每天都会变，具体以预约成功的为准)
-          </span>
-        </el-form-item>
       </template>
     </el-form>
 
@@ -62,7 +40,6 @@
 </template>
 
 <script>
-import { cloneDeep } from 'lodash'
 import VaccH5 from '@/library/modules/vaccH5'
 
 const configEnums = {
@@ -80,17 +57,11 @@ export default {
       type: 'add', // add-新增 edit-编辑
       form: {
         token: '',
-        reusTrueName: '',
-        depaId: '',
-        corpName: ''
+        reusTrueName: ''
       },
       rules: {
-        token: [{ required: true, message: '用户token必填' }],
-        depaId: [{ required: true, message: '请选择接种门诊' }],
-        corpName: [{ required: true, message: '疫苗厂商不能为空，选择门诊自动带出，如没有带出关闭弹框重新新增或换一家门诊' }]
+        token: [{ required: true, message: '用户token必填' }]
       },
-      depaOps: [],
-      loadingSearchDepa: false,
       loadingBtnCheckToken: false
     }
   },
@@ -99,22 +70,15 @@ export default {
       return configEnums[type]
     }
   },
-  watch: {
-    'form.depaId'(value) {
-      this.depaChange(value)
-    }
-  },
   methods: {
-    open({ row, appId = '', bactCode = '' }) {
+    open({ row, appId = '' }) {
       return new Promise((resolve, reject) => {
         if (row) {
+          // todo：编辑功能未做，因为就保存一个 token 不需要编辑，变更 token 可以删除旧的 重新添加即可
           this.type = 'edit'
-          this.form = cloneDeep(row)
-          this.searchDepa(row.outpName)
         } else {
           this.type = 'add'
         }
-        this.bactCode = bactCode
         this.appId = appId
         this.show = true
 
@@ -123,44 +87,18 @@ export default {
       })
     },
     async checkToken() {
-      this.loadingBtnCheckToken = true
-      const res = await VaccH5.getUserInfo({
-        token: this.form.token,
-        appId: this.appId
-      }).finally(() => {
-        this.loadingBtnCheckToken = false
-      })
-      this.form.reusId = res.registerUser[0].reusId // 预约接口需要用到这个参数
-      this.form.reusTrueName = res.registerUser[0].reusTrueName
-    },
-    // 搜索门诊
-    async searchDepa(query) {
       try {
-        if (query === '') {
-          this.depaOps = []
-        } else {
-          this.loadingSearchDepa = true
-          const res = await VaccH5.getDepaList({
-            token: this.form.token,
-            params: {
-              outpName: query,
-              bactCode: this.bactCode // 加了这个参数，请求才会返回 corpCode、corpName 参数
-            }
-          }).finally(() => {
-            this.loadingSearchDepa = false
-          })
-          this.depaOps = res?.list || []
-        }
+        this.loadingBtnCheckToken = true
+        const res = await VaccH5.getUserInfo({
+          token: this.form.token,
+          appId: this.appId
+        }).finally(() => {
+          this.loadingBtnCheckToken = false
+        })
+        this.form.reusId = res.registerUser[0].reusId // 预约接口需要用到这个参数
+        this.form.reusTrueName = res.registerUser[0].reusTrueName
       } catch (e) {
-        e.msg && this.$message.error(e.msg)
-      }
-    },
-    depaChange(depaId) {
-      const target = this.depaOps.find(item => item.depaId === depaId)
-      if (target) {
-        this.form.corpName = target.corpName
-        this.form.corpCode = target.corpCode
-        this.form.outpName = target.outpName
+        this.$message.error('校验失败请确认token是否正确或已过期重新获取')
       }
     },
     async ok() {
@@ -174,8 +112,6 @@ export default {
         this.$refs.form.clearValidate()
       })
       this.appId = ''
-      this.bactCode = ''
-      this.depaOps = []
       this.reject = null
       this.resolve = null
     }

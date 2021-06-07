@@ -154,13 +154,13 @@ export default {
     // 检查是否有剩余的票
     ifHaveSurplus(task) {
       return new Promise((resolve, reject) => {
-        const { interval, users, date, vaccCode, time } = task
+        const { interval, users, date, vaccCode, time, depaId } = task
         task.timer = setInterval(async() => {
           try {
             const times = await VaccH5.getOutpatientTimes({
               token: users[0].token,
               query: {
-                depaId: users[0].depaId,
+                depaId,
                 date,
                 vaccCode
               }
@@ -202,33 +202,33 @@ export default {
       })
     },
     // 处理预约
-    handleReservation(task, targetTime) {
-      const { users, date, vaccCode, appId } = task
-      users.forEach(async (user) => {
-        // 通过门诊名字重新请求拿到门诊最新信息，更新疫苗厂家，因为疫苗厂家每天都会有变化
-        const depaList = await VaccH5.getDepaList({
-          token: user.token,
-          params: {
-            outpName: user.outpName,
-            bactCode: task.vaccCode
-          }
-        })
-        const targetDepa = depaList?.list?.[0]
-        if (targetDepa?.outpName === user.outpName && targetDepa?.corpCode) {
-          // 门诊一样且有疫苗厂商代码（有时候请求接口没有返回这两个字段，原因待究），再更新疫苗厂商信息
-          user.corpName = targetDepa.corpName
-          user.corpCode = targetDepa.corpCode
+    async handleReservation(task, targetTime) {
+      // 通过门诊名字重新请求拿到门诊最新信息，更新疫苗厂家，因为疫苗厂家每天都会有变化
+      const depaList = await VaccH5.getDepaList({
+        token: task.users[0].token,
+        params: {
+          outpName: task.outpName,
+          bactCode: task.vaccCode
         }
+      })
+      const targetDepa = depaList?.list?.[0]
+      if (targetDepa?.outpName === task.outpName && targetDepa?.corpCode) {
+        // 门诊一样且有疫苗厂商代码（有时候请求接口没有返回这两个字段，原因待究），再更新疫苗厂商信息
+        task.corpName = targetDepa.corpName
+        task.corpCode = targetDepa.corpCode
+      }
 
+      // 处理每个 user 的预约
+      task.users.forEach(async (user) => {
         const payload = {
           token: user.token,
-          appId,
+          appId: task.appId,
           params: {
             reusId: user.reusId,
-            depaId: user.depaId,
-            date,
+            depaId: task.depaId,
+            date: task.date,
             ouatId: targetTime.ouatId,
-            vaccCodes: vaccCode,
+            vaccCodes: task.vaccCode,
             corpCode: user.corpCode
           }
         }
